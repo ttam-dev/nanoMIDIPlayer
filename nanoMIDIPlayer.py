@@ -2209,12 +2209,19 @@ class App(customtkinter.CTk):
                                 kb.release(key.lower())
                             log_message = f"press: shift + {key.lower()}"
                         else:
-                            kb.press(key)
+                            if key in ['i', 'o']:
+                                kb.press('ctrl')
+                                kb.press(key)
+                                if not self.config_data["holdKeys"]:
+                                    kb.release(key)
+                                    kb.release('ctrl')
+                                log_message = f"press: ctrl + {key}"
+                            else:
+                                kb.press(key)
+                                if not self.config_data["holdKeys"]:
+                                    kb.release(key)
+                                log_message = f"press: {key}"
                             self.pressed_keys.add(key)
-                            if not self.config_data["holdKeys"]:
-                                kb.release(key)
-                            log_message = f"press: {key}"
-
                     elif self.config_data["88Keys"]:
                         K = None
                         if 20 <= note < 40:
@@ -2234,9 +2241,17 @@ class App(customtkinter.CTk):
                         kb.release(letterNoteMap[index - 1])
                         log_message = f"release: {letterNoteMap[index - 1]}"
                     else:
-                        kb.release(key.lower())
-                        self.pressed_keys.discard(key.lower())
-                        log_message = f"release: {key.lower()}"
+                        key_lower = key.lower()
+                        kb.release(key_lower)
+                        self.pressed_keys.discard(key)
+
+                        # Only release 'ctrl' if no other 'i' or 'o' keys are currently pressed
+                        if key_lower in ['i', 'o']:
+                            is_another_io_pressed = any(k.lower() in ['i', 'o'] for k in self.pressed_keys)
+                            if not is_another_io_pressed:
+                                kb.release('ctrl')
+
+                        log_message = f"release: {key_lower}"
                 else:
                     if 20 <= note < 40:
                         K = LowNotes[note - 21]
